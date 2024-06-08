@@ -747,6 +747,9 @@ def main(args):
 
     locals().update(empty_vars)
 
+    for var in ban_list:
+        print(var, locals()[var])
+
     if test:
 
         output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
