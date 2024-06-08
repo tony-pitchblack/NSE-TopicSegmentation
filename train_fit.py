@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-from pytorch_lightning.profiler import PyTorchProfiler
+from pytorch_lightning.profilers import PyTorchProfiler
 from models.EncoderDataset import *
 
 from utils.load_datasets import *
