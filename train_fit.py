@@ -673,7 +673,6 @@ def main(args):
             # f1_best = (use_f1 and results_valid[-1][0]>=best_results) or (args.metric == 'B' and metrics['B']>=best_results['B'])
             f1_best = (use_f1 and Valid >= best_results)
 
-            best_hu = None
             # if f1_best or (args.metric == 'Pk' and metrics['Pk']<best_results['Pk']) or (args.metric == 'WD' and metrics['WD']<best_results['WD']):
             if f1_best or (args.metric == 'Pk' and Valid < best_results) or (args.metric == 'WD' and Valid < best_results):
 
@@ -740,6 +739,15 @@ def main(args):
         label_map = {'Pk': 'Precision', 'WD': 'Recall', 'F1': 'F1'}
     else:
         label_map = {'Pk': 'Pk', 'WD': 'WD', 'F1': 'F1'}
+
+    ban_list = [
+        'best_hu',
+        'best_nl',
+    ]
+    for var in ban_list:
+        if var not in locals():
+            print(f"Variable '{var}' is set to None.")
+            locals()[var] = None
 
     if test:
 
