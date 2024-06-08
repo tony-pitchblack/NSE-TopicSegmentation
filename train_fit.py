@@ -740,14 +740,12 @@ def main(args):
     else:
         label_map = {'Pk': 'Pk', 'WD': 'WD', 'F1': 'F1'}
 
-    ban_list = [
-        'best_hu',
-        'best_nl',
-    ]
-    for var in ban_list:
-        if var not in locals():
-            print(f"Variable '{var}' is set to None.")
-            locals()[var] = None
+    empty_vars = {
+        'best_hu': None,
+        'best_nl': None,
+    }
+
+    locals().update(empty_vars)
 
     if test:
 
