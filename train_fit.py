@@ -740,12 +740,20 @@ def main(args):
     else:
         label_map = {'Pk': 'Pk', 'WD': 'WD', 'F1': 'F1'}
 
-    empty_vars = {
-        'best_hu': None,
-        'best_nl': None,
-    }
-
-    locals().update(empty_vars)
+    if 'best_hu' not in locals():
+        best_hu = None
+    if 'best_nl' not in locals():
+        best_nl = None
+    if 'confidence_Pks' not in locals():
+        confidence_Pks = None
+    if 'confidence_WDs' not in locals():
+        confidence_WDs = None
+    if 'confidence_Bs' not in locals():
+        confidence_Bs = None
+    if 'confidence_F1s' not in locals():
+        confidence_F1s = None
+    if 'confidence_Valid' not in locals():
+        confidence_Valid = None
 
     if test:
 
