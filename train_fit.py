@@ -749,6 +749,9 @@ def main(args):
             print(f"Variable '{var}' is set to None.")
             locals()[var] = None
 
+    for var in ban_list:
+        print(var, locals()[var])
+
     if test:
 
         output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
