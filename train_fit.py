@@ -673,6 +673,7 @@ def main(args):
             # f1_best = (use_f1 and results_valid[-1][0]>=best_results) or (args.metric == 'B' and metrics['B']>=best_results['B'])
             f1_best = (use_f1 and Valid >= best_results)
 
+            best_hu = None
             # if f1_best or (args.metric == 'Pk' and metrics['Pk']<best_results['Pk']) or (args.metric == 'WD' and metrics['WD']<best_results['WD']):
             if f1_best or (args.metric == 'Pk' and Valid < best_results) or (args.metric == 'WD' and Valid < best_results):
 
