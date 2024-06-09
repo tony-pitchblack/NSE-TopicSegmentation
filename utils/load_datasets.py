@@ -1,6 +1,9 @@
 from utils.choiloader_sentences import *
 from utils.wiki_loader_sentences import *
 from utils.corus_dataset import *
+from sklearn.model_selection import train_test_split
+# from tqdm.notebook import tqdm
+from tqdm import tqdm
 import os
 import sys
 import json
@@ -56,8 +59,27 @@ def load_dataset(dataset,
 
     if dataset == 'lenta':
         from corus import load_lenta
+
+        segments_per_doc = 20
         url = 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
-        train = CorusDataset(load_lenta, url, articles_per_doc=50)
+        dataset = CorusDataset(load_lenta, url,
+                               segments_per_doc=segments_per_doc)
+
+        docs_all = []
+
+        texts_cnt = 739351
+        docs_cnt = texts_cnt // segments_per_doc
+        print("Loading 'lenta' dataset...")
+        for doc in tqdm(dataset, total=docs_cnt, desc="Collecting docs:"):
+            docs_all.append(doc)
+        print("Done!")
+        
+        train_pct, val_pct = 0.7, 0.2
+        train_val_data, test_data = train_test_split(docs_all, train_size=train_pct)
+        train_data, val_data = train_test_split(train_val_data, test_size=val_pct)
+
+        return ([train_data, test_data, val_data])
+            
     elif dataset == 'BBC':
         with open('data/BBC/train.json', encoding="utf-8") as f:
             train = json.load(f)

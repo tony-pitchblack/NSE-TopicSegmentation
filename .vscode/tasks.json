@@ -8,6 +8,12 @@
             "type": "shell",
             "command": "rm",
             "args": ["-rf", "choi_test"]
+        },
+        {
+            "label": "remove lenta_test",
+            "type": "shell",
+            "command": "rm",
+            "args": ["-rf", "lenta_test"]
         }
     ]
 }
