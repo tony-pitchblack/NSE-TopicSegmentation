@@ -1,5 +1,6 @@
 from utils.choiloader_sentences import *
 from utils.wiki_loader_sentences import *
+from corus_dataset import *
 import os
 import sys
 import json
@@ -53,7 +54,8 @@ def load_dataset(dataset,
 
     np.random.seed(1)
 
-    if dataset == 'BBC':
+    if dataset == 'corus'
+    elif dataset == 'BBC':
         with open('data/BBC/train.json', encoding="utf-8") as f:
             train = json.load(f)
 
