@@ -39,7 +39,8 @@ def main(args):
         from pytorch_lightning.loggers import WandbLogger
         import wandb
 
-        if args.wandb_key != 0:
+        if str(args.wandb_key) != '0':
+            print(f"Logging into wanbd with key: {args.wandb_key}")
             wandb.login(key=args.wandb_key)
         else:
             wandb.login()  # enter your API key when prompted
@@ -497,11 +498,11 @@ def main(args):
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
-                              devices=args.num_gpus,
+                              gpus=args.num_gpus,
                               auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,
-                              detect_anomaly=True,
+                            #   detect_anomaly=True,
                               logger=logger,
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
@@ -510,6 +511,7 @@ def main(args):
             if args.auto_lr_finder:
                 trainer.tune(model, train_loader, valid_loader)
 
+            print("Starting training...")
             trainer.fit(model, train_loader, valid_loader)
 
             threshold = args.threshold if args.threshold else float(
