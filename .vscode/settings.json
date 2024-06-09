@@ -1,0 +1,5 @@
+{
+    "python.venvPath": "/home/brazen/miniconda3/envs/",
+    "python.terminal.activateEnvironment": false,
+    "python.defaultInterpreterPath": "/home/brazen/miniconda3/envs/ds-3.9"
+}
