@@ -6,8 +6,7 @@ Created on Tue May 11 15:00:49 2021
 """
 
 import torch
-#import pytorch_lightning as pl
-import lightning.pytorch as pl
+import pytorch_lightning as pl
 import numpy as np
 from scipy.stats import mode
 from sklearn.metrics import f1_score
