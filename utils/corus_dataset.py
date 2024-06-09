@@ -1,6 +1,5 @@
 from torch.utils.data import IterableDataset, DataLoader
 import subprocess
-import wget
 import os
 import nltk
 nltk.download('punkt')
@@ -8,8 +7,7 @@ nltk.download('punkt')
 
 class CorusDataset(IterableDataset):
     def __init__(self, load_func, corpus_url, articles_per_doc, ret_titles=False):
-        self.corpus_path = os.path.basename(
-            corpus_url)  # wget saves to current dir
+        self.corpus_path = os.path.basename(corpus_url)  # wget saves to current dir
         self.sentence_tokenizer = nltk.data.load(
             'tokenizers/punkt/russian.pickle')
 
@@ -23,6 +21,8 @@ class CorusDataset(IterableDataset):
         if out.returncode != 0:
             print("Error while loading file:")
             print(out.stdout)
+        else:
+            print(f"Sucessfully loaded corus dataset: '{self.corpus_path}")
 
     def generate_doc(self):
         records = self.load_func(self.corpus_path)

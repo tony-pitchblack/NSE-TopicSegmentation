@@ -11,7 +11,7 @@ import argparse
 from models.lightning_model import *
 from utils.load_datasets import *
 from models.EncoderDataset import *
-from pytorch_lightning.profilers import PyTorchProfiler
+from pytorch_lightning.profiler import PyTorchProfiler
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning import Trainer, seed_everything
 from sentence_transformers import SentenceTransformer
@@ -497,7 +497,7 @@ def main(args):
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
-                              gpus=args.num_gpus,
+                              devices=args.num_gpus,
                               auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,

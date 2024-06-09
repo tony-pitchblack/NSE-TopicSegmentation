@@ -1,6 +1,6 @@
 from utils.choiloader_sentences import *
 from utils.wiki_loader_sentences import *
-from corus_dataset import *
+from utils.corus_dataset import *
 import os
 import sys
 import json
@@ -54,7 +54,10 @@ def load_dataset(dataset,
 
     np.random.seed(1)
 
-    if dataset == 'corus'
+    if dataset == 'lenta':
+        from corus import load_lenta
+        url = 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
+        train = CorusDataset(load_lenta, url, articles_per_doc=50)
     elif dataset == 'BBC':
         with open('data/BBC/train.json', encoding="utf-8") as f:
             train = json.load(f)
