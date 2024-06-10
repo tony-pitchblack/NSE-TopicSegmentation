@@ -504,10 +504,13 @@ def main(args):
             else:
                 limit_valid_batches = float(args.limit_valid_batches)
 
-            gpu_kwargs = dict(
-                accelerator='gpu',
-                devices=args.num_gpus,
-            )
+            if device == 'gpu':
+                gpu_kwargs = dict(
+                    accelerator='gpu',
+                    devices=args.num_gpus,
+                )
+            else:
+                gpu_kwargs = {}
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
