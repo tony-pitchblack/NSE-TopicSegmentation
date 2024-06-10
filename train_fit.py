@@ -507,9 +507,9 @@ def main(args):
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
-                              #   accelerator='gpu'
-                              #   gpus=args.num_gpus,
-                              #   devices=args.num_gpus,
+                              accelerator='gpu',
+                              devices=args.num_gpus,
+                              # gpus=args.num_gpus,
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,
