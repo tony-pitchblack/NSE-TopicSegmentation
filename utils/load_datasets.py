@@ -48,7 +48,8 @@ def load_dataset(dataset,
                  mask_inner_sentences=False,
                  mask_probability=0.7,
                  skip_preface=False,
-                 max_docs_cnt=None):
+                 max_docs_cnt=None,
+                 max_docs_frac=None):
     """
     Load all the available datasets. The function can be expanded, provided that in each case the output should be in the form of a list of tuples.
     where each tuple contains a fold of the processed dataset (just one fold/tuple if not using cross-validation).
@@ -56,6 +57,10 @@ def load_dataset(dataset,
     Note:
     Mask_inner_sentences is deprecated as dropping negative sentences all together disrupt the entire sequence.
     """
+    if max_docs_cnt is not None:
+        assert max_docs_frac is None, "Specify either count of fraction"
+    if max_docs_frac is not None:
+        assert max_docs_cnt is None, "Specify either count of fraction"
 
     np.random.seed(1)
 
@@ -75,7 +80,9 @@ def load_dataset(dataset,
         texts_cnt = 739351
         docs_cnt = texts_cnt // segments_per_doc
         if max_docs_cnt is not None:
-            docs_cnt = max_docs_cnt
+            print(f"Restricted to {max_docs_cnt} documents")
+        elif max_docs_frac is not None:
+            max_docs_cnt = int(texts_cnt * max_docs_cnt)
             print(f"Restricted to {max_docs_cnt} documents")
 
         pbar = tqdm(dataset, total=docs_cnt, desc="Collecting docs:")

@@ -1046,7 +1046,10 @@ if __name__ == '__main__':
                         help="If included, this option allows the use of a second encoder to compute embeddings and concatenate them with the ones computed from the first encoder.")
 
     parser.add_argument('--max_docs_cnt', required=False, type=int,
-                        help="If included, limit dataset size.")
+                        help="If included, limit dataset size by count.")
+
+    parser.add_argument('--max_docs_frac', required=False, type=float,
+                        help="If included, limit dataset size by fraction.")
 
     args = parser.parse_args()
 
