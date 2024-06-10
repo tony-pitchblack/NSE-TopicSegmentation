@@ -84,8 +84,10 @@ def load_dataset(dataset,
         elif max_docs_frac is not None:
             max_docs_cnt = int(texts_cnt * max_docs_frac)
             print(f"Restricted to {max_docs_cnt} documents")
+        else:
+            max_docs_cnt = docs_cnt
 
-        pbar = tqdm(dataset, total=docs_cnt, desc="Collecting docs:")
+        pbar = tqdm(dataset, total=max_docs_cnt, desc="Collecting docs:")
         for i, doc in enumerate(pbar):
             if i == max_docs_cnt:
                 break
