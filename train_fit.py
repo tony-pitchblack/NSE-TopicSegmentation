@@ -504,11 +504,13 @@ def main(args):
             else:
                 limit_valid_batches = float(args.limit_valid_batches)
 
+            gpu_kwargs = dict(
+                accelerator='gpu',
+                devices=args.num_gpus,
+            )
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
-                              accelerator='gpu',
-                              devices=args.num_gpus,
                               # gpus=args.num_gpus,
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
@@ -517,7 +519,8 @@ def main(args):
                               logger=logger,
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
-                              profiler=profiler)
+                              profiler=profiler,
+                              **gpu_kwargs)
 
             if args.auto_lr_finder:
                 trainer.tune(model, train_loader, valid_loader)
