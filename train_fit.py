@@ -14,6 +14,7 @@ from models.EncoderDataset import *
 from pytorch_lightning.profilers import PyTorchProfiler
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning.strategies import DDPStrategy
 from sentence_transformers import SentenceTransformer
 from torch.utils.data import DataLoader
 import tensorflow_hub as hub
@@ -524,6 +525,7 @@ def main(args):
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
                               profiler=profiler,
+                              strategy=DDPStrategy(find_unused_parameters=True),
                               **gpu_kwargs)
 
             if args.auto_lr_finder:
