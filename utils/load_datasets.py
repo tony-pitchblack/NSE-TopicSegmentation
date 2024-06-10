@@ -91,7 +91,9 @@ def load_dataset(dataset,
         train_data, val_data = train_test_split(
             train_val_data, test_size=val_pct)
 
-        return ([train_data, test_data, val_data])
+        out_list = [train_data, test_data, val_data]
+        out_list = [out_list]
+        return (out_list)
 
     elif dataset == 'BBC':
         with open('data/BBC/train.json', encoding="utf-8") as f:
