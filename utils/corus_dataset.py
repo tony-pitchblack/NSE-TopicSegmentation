@@ -4,6 +4,7 @@ import os
 import nltk
 nltk.download('punkt')
 
+
 class CorusDataset(IterableDataset):
     def __init__(self, load_func, corpus_url, segments_per_doc,
                  ret_titles=False, max_docs_count=None):
@@ -11,8 +12,10 @@ class CorusDataset(IterableDataset):
         self.__dict__.update(locals())
         del self.__dict__["self"]
 
-        self.corpus_path = os.path.basename(corpus_url) # wget saves to current dir
-        self.sentence_tokenizer = nltk.data.load('tokenizers/punkt/russian.pickle')
+        self.corpus_path = os.path.basename(
+            corpus_url)  # wget saves to current dir
+        self.sentence_tokenizer = nltk.data.load(
+            'tokenizers/punkt/russian.pickle')
 
         cmd = ['wget', '-nc', '-nv', corpus_url]
         out = subprocess.run(
@@ -28,7 +31,7 @@ class CorusDataset(IterableDataset):
 
         # corpus = ''
         true_seg_bounds = []
-        doc_segments = []
+        doc_sentences = []
         titles = []
 
         total_records = self.segments_per_doc
@@ -40,7 +43,7 @@ class CorusDataset(IterableDataset):
             segment_count = 1
             while True:
                 segment_sentences = self.sentence_tokenizer.tokenize(rec.text)
-                doc_segments.extend(segment_sentences)
+                doc_sentences.extend(segment_sentences)
                 if self.ret_titles:
                     titles.append(rec.title)
 
@@ -53,10 +56,11 @@ class CorusDataset(IterableDataset):
                 try:
                     rec = next(records)
                     if (segment_count + 1) % self.segments_per_doc == 0:
+                        true_seg_bounds.append(0)
                         output = [
-                            doc_segments,
+                            doc_sentences,
                             true_seg_bounds,
-                            docs_count # as id
+                            docs_count  # as id
                         ]
 
                         # if self.ret_titles:
@@ -68,7 +72,7 @@ class CorusDataset(IterableDataset):
                             is_last_record = True
 
                         true_seg_bounds = []
-                        doc_segments = []
+                        doc_sentences = []
                         # titles = []
                         break
                     else:
@@ -79,7 +83,6 @@ class CorusDataset(IterableDataset):
                     break
 
             yield output
-
 
     def configure_iterator(self, ret_titles):
         self.ret_titles = ret_titles
