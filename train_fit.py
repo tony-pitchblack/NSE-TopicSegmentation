@@ -39,6 +39,7 @@ def main(args):
         from pytorch_lightning.loggers import WandbLogger
         import wandb
 
+        os.environ["WANDB_DISABLE_SERVICE"] = True
         if str(args.wandb_key) != '0':
             print(f"Logging into wanbd with key: {args.wandb_key}")
             wandb.login(
