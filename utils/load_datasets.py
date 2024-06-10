@@ -71,12 +71,17 @@ def load_dataset(dataset,
 
         docs_all = []
 
+        print("Loading 'lenta' dataset...")
         texts_cnt = 739351
         docs_cnt = texts_cnt // segments_per_doc
         if max_docs_cnt is not None:
             docs_cnt = max_docs_cnt
-        print("Loading 'lenta' dataset...")
-        for doc in tqdm(dataset, total=docs_cnt, desc="Collecting docs:"):
+            print(f"Restricted to {max_docs_cnt} documents")
+
+        pbar = tqdm(dataset, total=docs_cnt, desc="Collecting docs:")
+        for i, doc in enumerate(pbar):
+            if i == max_docs_cnt:
+                break
             docs_all.append(doc)
         print("Done!")
 
