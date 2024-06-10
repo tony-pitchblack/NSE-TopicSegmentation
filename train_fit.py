@@ -124,7 +124,7 @@ def main(args):
 
         in_dim = encoder.get_sentence_embedding_dimension()+second_dim
 
-    # os.chdir(args.experiment_name)
+    os.chdir(args.experiment_name)
 
     precompute = not args.online_encoding
 
