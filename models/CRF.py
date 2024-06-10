@@ -595,7 +595,6 @@ class BiLSTM(nn.Module):
 
             # loss = None
             # Just an option to ignore padding completely with a brute force approach: in case of BCE loss this option might be prefer as there is no option to ignore the padded indeces in the loss (contrary to CE)
-            x_before_agg = x.clone()
             outputs = []
             targets = []
             if self.add_emb:
@@ -625,8 +624,6 @@ class BiLSTM(nn.Module):
             tags = torch.cat(targets, axis=0)
             if self.add_emb:
                 xs = torch.cat(embs, axis=0).to(device)
-            x_after_agg = x_before_agg.flatten(start_dim=0, end_dim=1)
-            print(x_after_agg == x)
 
         if self.add_emb:
             x = self.classification(torch.cat(
