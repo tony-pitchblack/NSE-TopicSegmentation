@@ -82,7 +82,7 @@ def load_dataset(dataset,
         if max_docs_cnt is not None:
             print(f"Restricted to {max_docs_cnt} documents")
         elif max_docs_frac is not None:
-            max_docs_cnt = int(texts_cnt * max_docs_cnt)
+            max_docs_cnt = int(texts_cnt * max_docs_frac)
             print(f"Restricted to {max_docs_cnt} documents")
 
         pbar = tqdm(dataset, total=docs_cnt, desc="Collecting docs:")

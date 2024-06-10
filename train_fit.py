@@ -83,7 +83,8 @@ def main(args):
                          use_end_boundary=args.use_end_boundary,
                          mask_inner_sentences=args.mask_negatives,
                          mask_probability=args.mask_percentage,
-                         max_docs_cnt=args.max_docs_cnt)
+                         max_docs_cnt=args.max_docs_cnt,
+                         max_docs_frac=args.max_docs_frac)
 
     if len(folds) == 1:
         test = True
