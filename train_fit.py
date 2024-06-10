@@ -45,7 +45,7 @@ def main(args):
                 key=args.wandb_key,
                 # relogin=True,
                 # force=True
-                )
+            )
         else:
             wandb.login()  # enter your API key when prompted
 
@@ -74,11 +74,15 @@ def main(args):
     test = False
     valid = False
 
+    # TODO: add caching
+    # data_path = os.path.join('data', args.dataset)
+    # os.makedirs(data_path, exist_ok=True)
     folds = load_dataset(args.dataset,
                          delete_last_sentence=args.delete_last_sentence,
                          use_end_boundary=args.use_end_boundary,
                          mask_inner_sentences=args.mask_negatives,
-                         mask_probability=args.mask_percentage)
+                         mask_probability=args.mask_percentage,
+                         max_docs_cnt=args.max_docs_cnt)
 
     if len(folds) == 1:
         test = True
@@ -502,10 +506,10 @@ def main(args):
             profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
-                            #   accelerator='gpu'
-                            #   gpus=args.num_gpus,
-                            #   devices=args.num_gpus,
-                            #   auto_lr_find=args.auto_lr_finder,
+                              #   accelerator='gpu'
+                              #   gpus=args.num_gpus,
+                              #   devices=args.num_gpus,
+                              #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,
                               detect_anomaly=True,
@@ -1039,6 +1043,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--second_encoder', required=False, type=str,
                         help="If included, this option allows the use of a second encoder to compute embeddings and concatenate them with the ones computed from the first encoder.")
+
+    parser.add_argument('--max_docs_cnt', required=False, type=int,
+                        help="If included, limit dataset size.")
 
     args = parser.parse_args()
 

@@ -10,6 +10,7 @@ import json
 import pandas as pd
 import numpy as np
 import nltk
+import pickle
 nltk.download('punkt')
 
 
@@ -46,7 +47,8 @@ def load_dataset(dataset,
                  use_end_boundary=False,
                  mask_inner_sentences=False,
                  mask_probability=0.7,
-                 skip_preface=False):
+                 skip_preface=False,
+                 max_docs_cnt=None):
     """
     Load all the available datasets. The function can be expanded, provided that in each case the output should be in the form of a list of tuples.
     where each tuple contains a fold of the processed dataset (just one fold/tuple if not using cross-validation).
@@ -60,6 +62,8 @@ def load_dataset(dataset,
     if dataset == 'lenta':
         from corus import load_lenta
 
+        # data_path = os.path.join('data_', dataset)
+
         segments_per_doc = 20
         url = 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
         dataset = CorusDataset(load_lenta, url,
@@ -69,17 +73,21 @@ def load_dataset(dataset,
 
         texts_cnt = 739351
         docs_cnt = texts_cnt // segments_per_doc
+        if max_docs_cnt is not None:
+            docs_cnt = max_docs_cnt
         print("Loading 'lenta' dataset...")
         for doc in tqdm(dataset, total=docs_cnt, desc="Collecting docs:"):
             docs_all.append(doc)
         print("Done!")
-        
+
         train_pct, val_pct = 0.7, 0.2
-        train_val_data, test_data = train_test_split(docs_all, train_size=train_pct)
-        train_data, val_data = train_test_split(train_val_data, test_size=val_pct)
+        train_val_data, test_data = train_test_split(
+            docs_all, train_size=train_pct)
+        train_data, val_data = train_test_split(
+            train_val_data, test_size=val_pct)
 
         return ([train_data, test_data, val_data])
-            
+
     elif dataset == 'BBC':
         with open('data/BBC/train.json', encoding="utf-8") as f:
             train = json.load(f)
