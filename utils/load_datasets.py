@@ -65,18 +65,32 @@ def load_dataset(dataset,
 
     np.random.seed(1)
 
-    if dataset == 'lenta':
-        from corus import load_lenta
+    if dataset.split('/')[0] == 'corus':
+        from corus import load_lenta, load_ria
 
         # data_path = os.path.join('data_', dataset)
 
-        url = 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
-        dataset = CorusDataset(load_lenta, url,
-                               segments_per_doc=segments_per_doc)
+        corus_datasets = {
+            'lenta': {
+                'load_fn': load_lenta,
+                'url': 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
+            },
+            'ria': {
+                'load_fn': load_lenta,
+                'url': 'https://github.com/RossiyaSegodnya/ria_news_dataset/raw/master/ria.json.gz'
+            }
+        }
+        corus_name = dataset.split('/')[1]
+        assert corus_name in corus_datasets.keys(), \
+            "When using corus dataset, dataset name should be in form of 'corus/DATASET_NAME'."
+
+        load_fn = corus_datasets[corus_name]['load_fn']
+        url = corus_datasets[corus_name]['url']
+        dataset = CorusDataset(load_fn, url, segments_per_doc=segments_per_doc)
 
         docs_all = []
 
-        print("Loading 'lenta' dataset...")
+        print(f"Loading {corus_name} dataset...")
         texts_cnt = 739351
         docs_cnt = texts_cnt // segments_per_doc
         if max_docs_cnt is not None:
@@ -1189,10 +1203,7 @@ def load_dataset(dataset,
             folds = [(train_data, test_data, valid_data)]
 
     elif dataset.lower() == "choi":
-        import os
-        cwd = os.getcwd()
-        print(f"Curr work dir: {cwd}")
-        data = ChoiDataset('./data/choi')
+        data = ChoiDataset('data/choi')
         data_list = []
         for w in data:
             if w[0]:
