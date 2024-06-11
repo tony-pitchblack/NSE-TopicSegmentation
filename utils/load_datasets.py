@@ -50,6 +50,7 @@ def load_dataset(dataset,
                  skip_preface=False,
                  max_docs_cnt=None,
                  max_docs_frac=None,
+                 corus=False,
                  segments_per_doc=20):
     """
     Load all the available datasets. The function can be expanded, provided that in each case the output should be in the form of a list of tuples.
@@ -65,7 +66,7 @@ def load_dataset(dataset,
 
     np.random.seed(1)
 
-    if dataset.split('/')[0] == 'corus':
+    if corus:
         from corus import load_lenta, load_ria
 
         # data_path = os.path.join('data_', dataset)
@@ -80,17 +81,17 @@ def load_dataset(dataset,
                 'url': 'https://github.com/RossiyaSegodnya/ria_news_dataset/raw/master/ria.json.gz'
             }
         }
-        corus_name = dataset.split('/')[1]
-        assert corus_name in corus_datasets.keys(), \
-            "When using corus dataset, dataset name should be in form of 'corus/DATASET_NAME'."
 
-        load_fn = corus_datasets[corus_name]['load_fn']
-        url = corus_datasets[corus_name]['url']
+        assert dataset in corus_datasets.keys(), \
+            "When using corus dataset, dataset name should be one of available corus datasets."
+
+        load_fn = corus_datasets[dataset]['load_fn']
+        url = corus_datasets[dataset]['url']
         dataset = CorusDataset(load_fn, url, segments_per_doc=segments_per_doc)
 
         docs_all = []
 
-        print(f"Loading {corus_name} dataset...")
+        print(f"Loading {dataset} dataset...")
         texts_cnt = 739351
         docs_cnt = texts_cnt // segments_per_doc
         if max_docs_cnt is not None:

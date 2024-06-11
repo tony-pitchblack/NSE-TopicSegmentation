@@ -85,7 +85,8 @@ def main(args):
                          mask_inner_sentences=args.mask_negatives,
                          mask_probability=args.mask_percentage,
                          max_docs_cnt=args.max_docs_cnt,
-                         max_docs_frac=args.max_docs_frac)
+                         max_docs_frac=args.max_docs_frac,
+                         corus=args.corus)
 
     if len(folds) == 1:
         test = True
@@ -1063,8 +1064,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--segments_per_doc', '-spd', required=False, type=int, default=20,
                         help="Specify segments per generated document for corus datasets.")
+
     parser.add_argument('--detect_anomaly', action='store_true',
                         help="If included, sets pytorch-lightning Trainer parameter detect anomaly to True.")
+
+    parser.add_argument('--corus', action='store_true',
+                        help="If included, --dataset option specifies one of 'corus' datasets.")
 
     args = parser.parse_args()
 
