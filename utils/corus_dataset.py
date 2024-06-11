@@ -17,8 +17,8 @@ class CorusDataset(IterableDataset):
         self.sentence_tokenizer = nltk.data.load(
             'tokenizers/punkt/russian.pickle')
 
-        # cmd = ['wget', '-nc', '-nv', corpus_url]
-        cmd = ['curl', '-O', corpus_url]
+        cmd = ['wget', '-nc', '-nv', corpus_url]
+        # cmd = ['curl', '-O', corpus_url]
         out = subprocess.run(
             cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if out.returncode != 0:
