@@ -1189,7 +1189,10 @@ def load_dataset(dataset,
             folds = [(train_data, test_data, valid_data)]
 
     elif dataset.lower() == "choi":
-        data = ChoiDataset('data/choi')
+        import os
+        cwd = os.getcwd()
+        print(f"Curr work dir: {cwd}")
+        data = ChoiDataset('./data/choi')
         data_list = []
         for w in data:
             if w[0]:

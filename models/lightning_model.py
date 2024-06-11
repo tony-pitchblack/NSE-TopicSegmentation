@@ -383,7 +383,6 @@ class TextSegmenter(pl.LightningModule):
         else:
             avg_loss = np.mean(self.losses)
             self.log_dict({'valid_loss':avg_loss})
-        
 
     def test_step(self, batch, batch_idx):
         sentence = batch['src_tokens'] 
@@ -498,6 +497,29 @@ class TextSegmenter(pl.LightningModule):
             self.test_scores.extend([scores[index, :].detach().tolist()[:length.data] for index, length in enumerate(lengths)])
     
         self.log_dict(results, on_epoch = True, prog_bar=True)
+
+    def predict_step(self, batch, batch_idx):
+        sentence = batch['src_tokens'] 
+        target = batch['tgt_tokens']
+        lengths = batch['src_lengths']
+        if self.ce:
+            attention_mask = batch['src_attention_mask']
+            lengths = [lengths, attention_mask]
+        
+        threshold = self.threshold if self.threshold is not None else .5
+            
+        self.model.th = threshold
+        
+        if self.arc == 'TextSeg':
+            sentence_lengths = batch['sentence_lengths']
+            scores, tags = self.model(sentence, sentence_lengths, lengths)
+        else:    
+            scores, tags = self.model(sentence, lengths, device = self.device)
+            if self.ce:
+                lengths, _ = lengths
+    
+        return scores, tags
+
     
     # def on_test_epoch_end(self):
     #     if self.s_th:

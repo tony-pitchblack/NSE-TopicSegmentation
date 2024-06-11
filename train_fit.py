@@ -14,6 +14,7 @@ from models.EncoderDataset import *
 from pytorch_lightning.profilers import PyTorchProfiler
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning.strategies import DDPStrategy
 from sentence_transformers import SentenceTransformer
 from torch.utils.data import DataLoader
 import tensorflow_hub as hub
@@ -519,11 +520,13 @@ def main(args):
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,
-                              detect_anomaly=True,
+                              detect_anomaly=args.detect_anomaly,
                               logger=logger,
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
                               profiler=profiler,
+                              strategy=DDPStrategy(
+                                  find_unused_parameters=True),
                               **gpu_kwargs)
 
             if args.auto_lr_finder:
@@ -1060,6 +1063,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--segments_per_doc', '-spd', required=False, type=int, default=20,
                         help="Specify segments per generated document for corus datasets.")
+    parser.add_argument('--detect_anomaly', action='store_true',
+                        help="If included, sets pytorch-lightning Trainer parameter detect anomaly to True.")
 
     args = parser.parse_args()
 
