@@ -100,6 +100,7 @@ def load_dataset(dataset,
             print(f"Restricted to {max_docs_cnt} documents")
         else:
             max_docs_cnt = docs_cnt
+        max_docs_cnt = min(max_docs_cnt, docs_cnt)
 
         pbar = tqdm(dataset, total=max_docs_cnt, desc="Collecting docs:")
         for i, doc in enumerate(pbar):
