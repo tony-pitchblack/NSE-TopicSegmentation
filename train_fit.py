@@ -149,6 +149,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = WordLevelDataset(
                     fold[0][:-valid_split], tag_to_ix, word2index, WordMatrix)
                 valid_dataset = WordLevelDataset(
@@ -198,6 +199,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = min(0, valid_split)
                 train_dataset = CrossEncoderDataset(
                     fold[0][:-valid_split], enc=encoder, minus=CRF, longformer=False)
                 valid_dataset = CrossEncoderDataset(
@@ -247,6 +249,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, precompute=precompute, CRF=CRF, cosine_loss=args.cosine_loss,
                                                 manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage, second_encoder=second_encoder)
                 valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder, precompute=precompute,
@@ -309,6 +312,7 @@ def main(args):
                         fold[2], tag_to_ix, encoder=encoder, embeddings=valid_embeddings, CRF=CRF, manual_max_length=args.max_doc_length)
                 else:
                     valid_split = int(len(fold[0])*valid_percentage)
+                    valid_split = max(1, valid_split)
                     train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, embeddings=train_embeddings, CRF=CRF, cosine_loss=args.cosine_loss,
                                                     manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage)
                     valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder,
@@ -345,6 +349,7 @@ def main(args):
             for index, fold in enumerate(folds):
 
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, embeddings=embeddings[index][0][:-valid_split], CRF=CRF, cosine_loss=args.cosine_loss,
                                                 manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage)
                 valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder,
