@@ -49,7 +49,8 @@ def load_dataset(dataset,
                  mask_probability=0.7,
                  skip_preface=False,
                  max_docs_cnt=None,
-                 max_docs_frac=None):
+                 max_docs_frac=None,
+                 segments_per_doc=20):
     """
     Load all the available datasets. The function can be expanded, provided that in each case the output should be in the form of a list of tuples.
     where each tuple contains a fold of the processed dataset (just one fold/tuple if not using cross-validation).
@@ -69,7 +70,6 @@ def load_dataset(dataset,
 
         # data_path = os.path.join('data_', dataset)
 
-        segments_per_doc = 20
         url = 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
         dataset = CorusDataset(load_lenta, url,
                                segments_per_doc=segments_per_doc)

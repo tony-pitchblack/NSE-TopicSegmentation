@@ -1058,6 +1058,9 @@ if __name__ == '__main__':
     parser.add_argument('--max_docs_frac', required=False, type=float,
                         help="If included, limit dataset size by fraction.")
 
+    parser.add_argument('--segments_per_doc', '-spd', required=False, type=int, default=20,
+                        help="Specify segments per generated document for corus datasets.")
+
     args = parser.parse_args()
 
     main(args)
