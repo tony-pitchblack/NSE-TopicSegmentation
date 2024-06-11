@@ -15,6 +15,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 import re
 import time
 import string
@@ -82,7 +83,10 @@ class SentenceDataset(Dataset):
         else:    
             if precompute: # TODO: include multiprocessing for generating the embeddings (with gpu/cpu support)
                 self.precompute = True
-                self.embeddings = [self.encoder.encode(sents, convert_to_tensor = True).detach().cpu() for sents in self.sentences]
+                self.embeddings = []
+                for sents in tqdm(self.sentences, desc='Computing embeddings:'):
+                    emb = self.encoder.encode(sents, convert_to_tensor = True).detach().cpu() 
+                self.embeddings.append(emb)
                 if second_encoder is not None:
                     second_embeddings = [self.encoder2.encode(sents, convert_to_tensor = True, show_progress_bar = False).detach().cpu() for sents in self.sentences]
                     print("Finished encoding with the second encoder!")
