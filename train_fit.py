@@ -520,7 +520,7 @@ def main(args):
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
                               precision=bits,
-                              detect_anomaly=True,
+                              detect_anomaly=args.detect_anomaly,
                               logger=logger,
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
@@ -1059,6 +1059,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--max_docs_frac', required=False, type=float,
                         help="If included, limit dataset size by fraction.")
+
+    parser.add_argument('--detect_anomaly', action='store_true',
+                        help="If included, sets pytorch-lightning Trainer parameter detect anomaly to True.")
 
     args = parser.parse_args()
 
