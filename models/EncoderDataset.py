@@ -27,7 +27,7 @@ from transformers import AutoTokenizer, AutoModel
 nltk.download('punkt')
 
 
-def load_embeddings(encoder_name, dataset_name, parent_directory='embeddings'):
+def load_embeddings(encoder_name, dataset_name, parent_directory='../embeddings'):
     in_dir = os.path.join(parent_directory, dataset_name, encoder_name)
 
     assert os.path.exists(
@@ -128,7 +128,7 @@ class SentenceDataset(Dataset):
     def __len__(self):
         return len(self.sentences)
 
-    def save_embeddings(self, encoder_name, dataset_name, parent_directory='embeddings'):
+    def save_embeddings(self, encoder_name, dataset_name, parent_directory='../embeddings'):
         assert len(
             self.embeddings[0]) > 1, 'The embeddings need to be precomputed in order to be saved'
 
