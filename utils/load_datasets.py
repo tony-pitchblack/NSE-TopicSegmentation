@@ -76,7 +76,7 @@ def load_dataset(dataset,
                 'url': 'https://github.com/yutkin/Lenta.Ru-News-Dataset/releases/download/v1.0/lenta-ru-news.csv.gz'
             },
             'ria': {
-                'load_fn': load_ria,
+                'load_fn': load_lenta,
                 'url': 'https://github.com/RossiyaSegodnya/ria_news_dataset/raw/master/ria.json.gz'
             }
         }
