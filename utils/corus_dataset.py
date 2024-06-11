@@ -56,7 +56,7 @@ class CorusDataset(IterableDataset):
                 # if current record is not last
                 try:
                     rec = next(records)
-                    if (segment_count + 1) % self.segments_per_doc == 0:
+                    if (segment_count - 1) % self.segments_per_doc == 0:
                         true_seg_bounds.append(0)
                         output = [
                             doc_sentences,
