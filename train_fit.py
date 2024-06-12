@@ -66,14 +66,21 @@ def main(args):
             print("Model will be saved as wandb artifact.")
         else:
             print("Model will NOT be saved as wandb artifact.")
-        logger = WandbLogger(log_model=log_model, name=exp_name, project=args.dataset+'_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
+        
+        # logger_dir = os.path.join(exp, os.path.split(exp)[0])
+        # logger_dir='hello_world/'
+        logger = WandbLogger(log_model=log_model,
+                             name=exp_name,
+                             project=args.dataset+'_'+args.architecture+'_'+args.metric,
+                             save_dir=exp
+                             )
     else:
         logger = None
 
     verbose = args.verbose
 
     assert not os.path.exists(
-        exp), 'The name of this experiment has already be used: please change experiment name or delete all the existent results from {} folder to use this name'.format(args.experiment_name)
+        exp), 'The name of this experiment has already be used: please change experiment name or delete all the existent results from {} folder to use this name'.format(exp)
 
     os.makedirs(exp)
 
@@ -142,7 +149,7 @@ def main(args):
 
         in_dim = encoder.get_sentence_embedding_dimension()+second_dim
 
-    os.chdir(args.experiment_name)
+    # os.chdir(exp)
 
     precompute = not args.online_encoding
 
@@ -353,10 +360,10 @@ def main(args):
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
         else:
-            os.chdir('../')
+            # os.chdir('../')
             embeddings = load_embeddings(
                 args.encoder, args.dataset, args.embeddings_directory)
-            os.chdir(args.experiment_name)
+            # os.chdir(exp)
             if args.dataset == 'choi':
                 embeddings = cross_validation_split(
                     embeddings, num_folds=7, n_test_folds=2)
@@ -430,7 +437,8 @@ def main(args):
     results_grid_wd = {layer: []
                         for layer in search_space['number_layers']}
 
-    with open('logs', 'w') as f:
+    logs_path = os.path.join(exp, 'logs')
+    with open(logs_path, 'w') as f:
         f.write('Training started all right...\n')
 
     seed_everything(args.seed, workers=True)
@@ -445,7 +453,7 @@ def main(args):
         hu, nl, d_in, d_out = param_tuple
 
         if args.hyperparameters_search:
-            with open('logs', 'a') as f:
+            with open(logs_path, 'a') as f:
                 f.write(
                     f'Results for model with {hu} hidden units and {nl} layers,\n'+ \
                         f'trained with dropout_in={d_in} an dropout_out={d_out}\n')
@@ -463,7 +471,7 @@ def main(args):
                 verbose=True,
                 mode=mode)
 
-            check_dir = 'checkpoints'
+            check_dir = os.path.join(exp, 'checkpoints')
 
             if args.save_all_checkpoints:
                 check_dir = check_dir + '_{}'.format(index)
@@ -544,9 +552,10 @@ def main(args):
                 )
             else:
                 gpu_kwargs = {}
-            profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
+            profiler = PyTorchProfiler(dirpath=exp, filename="perf_logs")
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
+                              default_root_dir=exp,
                               # gpus=args.num_gpus,
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
@@ -637,7 +646,7 @@ def main(args):
                 wd_label = 'WD_loss'
 
             if args.metric == 'B' or args.metric == 'scaiano':
-                with open('logs', 'a') as f:
+                with open(logs_path, 'a') as f:
                     f.write('Results for fold number {}\n'.format(index))
                     f.write('B_precision score: {}\n'.format(
                         results[-1][0][pk_label]))
@@ -650,7 +659,7 @@ def main(args):
                         f.write('B Similarity score: {}\n'.format(
                             results[-1][0][test_label]))
             else:
-                with open('logs', 'a') as f:
+                with open(logs_path, 'a') as f:
                     f.write('Results for fold number {}\n'.format(index))
                     f.write('PK score: {}\n'.format(results[-1][0][pk_label]))
                     f.write('WD score: {}\n'.format(results[-1][0][wd_label]))
@@ -825,7 +834,7 @@ def main(args):
 
     if test:
 
-        output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
+        output = ['Results for experiment {} with following parameters:'.format(exp),
                   'Sentence encoder: {}'.format(args.encoder),
                   'Neural architecture: {}'.format(args.architecture),
                   'Batch size: {}'.format(args.batch_size),
@@ -847,7 +856,7 @@ def main(args):
             output.append('Labels: ' + str(args.zero_shot_labels))
 
     else:
-        output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
+        output = ['Results for experiment {} with following parameters:'.format(exp),
                   'Sentence encoder: {}'.format(args.encoder),
                   'Neural architecture: {}'.format(args.architecture),
                   'Batch size: {}'.format(args.batch_size),
@@ -872,7 +881,8 @@ def main(args):
 
     if args.write_results:
 
-        with open('results.txt', 'w') as f:
+        results_path = os.path.join(exp, 'results.txt')
+        with open(results_path, 'w') as f:
             for line in output:
                 f.write('\n' + line + '\n')
 
@@ -881,7 +891,8 @@ def main(args):
                 pickle.dump(model.test_scores, f)
 
         argparse_dict = vars(args)
-        with open('hyperparameters.json', 'w') as f:
+        hparams_path = os.path.join(exp, 'hyperparameters.json')
+        with open(hparams_path, 'w') as f:
             json.dump(argparse_dict, f)
 
     if args.hyperparameters_search:
@@ -890,9 +901,9 @@ def main(args):
         wd_results = pd.DataFrame(results_grid_wd)
 
         if args.write_results:
-            f1_results.to_csv('F1_fit_results.csv')
-            pk_results.to_csv('Pk_fit_results.csv')
-            wd_results.to_csv('WD_fit_results.csv')
+            f1_results.to_csv(exp+'/F1_fit_results.csv')
+            pk_results.to_csv(exp+'/Pk_fit_results.csv')
+            wd_results.to_csv(exp+'/WD_fit_results.csv')
 
         return output, (f1_results, pk_results, wd_results)
 
