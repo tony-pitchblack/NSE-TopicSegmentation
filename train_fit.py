@@ -556,8 +556,9 @@ def main(args):
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
                               profiler=profiler,
-                              strategy=DDPStrategy(
-                                  find_unused_parameters=True),
+                              strategy='ddp_notebook',
+                            #   strategy=DDPStrategy(
+                            #       find_unused_parameters=True),
                               **gpu_kwargs)
 
             if args.auto_lr_finder:
