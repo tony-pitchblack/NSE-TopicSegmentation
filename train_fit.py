@@ -51,8 +51,17 @@ def main(args):
         else:
             wandb.login()  # enter your API key when prompted
 
-        logger = WandbLogger(log_model=False, name='enc_'+args.encoder + diff + '_opt_'+args.optimizer+'_lr_'+str(args.learning_rate)+'_bs_'+str(
-            args.batch_size)+'_loss_'+args.loss_function, project=args.dataset+'_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
+        exp_name = 'enc_'+args.encoder + diff \
+            + '_opt_'+args.optimizer \
+            + '_lr_'+str(args.learning_rate) \
+            +'_bs_'+str(args.batch_size) \
+            +'_loss_'+args.loss_function
+        log_model = not args.no_log_model
+        if log_model:
+            print("Model will be saved as wandb artifact.")
+        else:
+            print("Model will NOT be saved as wandb artifact.")
+        logger = WandbLogger(log_model=log_model, name=exp_name, project=args.dataset+'_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
     else:
         logger = None
 
@@ -90,14 +99,17 @@ def main(args):
 
     if len(folds) == 1:
         test = True
+        print("Using predefined test split")
         if len(folds[0]) == 3:
             valid = True
+            print("Using predefined val split")
         elif len(folds[0]) == 2:
-            pass
+            print("Using dynamically created val split")
         else:
             raise ValueError("The returned dataset contains an incorrect number of sublists. You should return either a list of two lists if having just a training and test set or return a list of three lists if having training, test and validation sets.")
     elif len(folds[0]) > 3 or len(folds[0]) < 2:
         raise ValueError("The returned dataset contains an incorrect number of sublists. You should return either a list of two lists if having just a training and test set or return a list of three lists if having training, test and validation sets.")
+    
 
     loaders = []
 
@@ -663,9 +675,9 @@ def main(args):
                 except:
                     pass
 
-                new_name = os.path.join(check_dir, 'best_model')
+                best_model_name = os.path.join(check_dir, 'best_model')
 
-                os.rename(checkpoint_callback.best_model_path, new_name)
+                os.rename(checkpoint_callback.best_model_path, best_model_name)
 
         else:
             Pks = [p[0][pk_label] for p in results]
@@ -711,9 +723,9 @@ def main(args):
                 best_hu = hu
                 best_nl = nl
 
-                new_name = os.path.join(check_dir, 'best_model')
+                best_model_name = os.path.join(check_dir, 'best_model')
 
-                os.rename(checkpoint_callback.best_model_path, new_name)
+                os.rename(checkpoint_callback.best_model_path, best_model_name)
 
                 def bootstrap(data, samples=10000):
                     if isinstance(data, list):
@@ -1075,6 +1087,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--corus', action='store_true',
                         help="If included, --dataset option specifies one of 'corus' datasets.")
+
+    parser.add_argument('--no_log_model', action='store_true',
+                        help="Disables saving model as wandb artifact")
 
     args = parser.parse_args()
 
