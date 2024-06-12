@@ -129,14 +129,15 @@ class SentenceDataset(Dataset):
         return len(self.sentences)
 
     def save_embeddings(self, encoder_name, dataset_name, parent_directory='../embeddings'):
-        assert len(
-            self.embeddings[0]) > 1, 'The embeddings need to be precomputed in order to be saved'
+        if  len(self.embeddings[0]) > 1:
+            print('The embeddings need to be precomputed in order to be saved')
+            return
 
         out_dir = os.path.join(parent_directory, dataset_name, encoder_name)
 
         if os.path.exists(out_dir):
-            assert len(os.listdir(
-                out_dir)) == 0, 'The folder where to save the embeddings is not empty: if you want to save your embeddings first make sure that the folder {} is empty'.format(out_dir)
+            if len(os.listdir(out_dir)) == 0:
+                print('The folder where to save the embeddings is not empty: if you want to save your embeddings first make sure that the folder {} is empty'.format(out_dir))
         else:
             os.makedirs(out_dir)
 
