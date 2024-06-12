@@ -110,13 +110,12 @@ def load_dataset(dataset,
             docs_all.append(doc)
         print("Done!")
 
-        train_pct, val_pct = 0.7, 0.2
+        train_pct = 0.8
         train_val_data, test_data = train_test_split(
             docs_all, train_size=train_pct)
-        train_data, val_data = train_test_split(
-            train_val_data, test_size=val_pct)
 
-        out_list = [train_data, test_data, val_data]
+        out_list = [train_val_data, test_data]
+
         out_list = [out_list]
         return (out_list)
 
