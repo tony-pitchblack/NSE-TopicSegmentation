@@ -90,6 +90,11 @@ class SentenceDataset(Dataset):
             # TODO: include multiprocessing for generating the embeddings (with gpu/cpu support)
             if precompute:
                 self.precompute = True
+
+                device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+                self.encoder = self.encoder.to(device)
+                print(f"Computing embeddings on {device}.")
+
                 pbar = tqdm(self.sentences, desc='Computing embeddings:')
                 self.embeddings = [self.encoder.encode(
                     sents, convert_to_tensor=True).detach().cpu() for sents in pbar]
