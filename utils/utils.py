@@ -15,8 +15,9 @@ config = {}
 
 def log_mem(obj, obj_name):
     gb = sys.getsizeof(obj) * 1e-9
+    gb = round(gb, 2)
     print(f"Object {obj_name} of class {obj.__class__} uses {gb} GB")
-    
+
 class TimeLogger():
     def __init__(self, proc_name):
         self.proc_name = proc_name
