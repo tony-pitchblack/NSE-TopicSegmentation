@@ -12,7 +12,7 @@ from models.lightning_model import *
 from utils.load_datasets import *
 from models.EncoderDataset import *
 from pytorch_lightning.profilers import PyTorchProfiler
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.strategies import DDPStrategy
 from sentence_transformers import SentenceTransformer
@@ -560,8 +560,11 @@ def main(args):
                 )
             else:
                 gpu_kwargs = {}
+
+            lr_monitor = LearningRateMonitor(logging_interval='epoch')
+
             profiler = PyTorchProfiler(dirpath=exp, filename="perf_logs", profile_memory=True)
-            trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
+            trainer = Trainer(callbacks=[early_stop, checkpoint_callback, lr_monitor],
                               max_epochs=args.max_epochs,
                               default_root_dir=exp,
                               # gpus=args.num_gpus,
