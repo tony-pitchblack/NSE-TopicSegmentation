@@ -29,6 +29,7 @@ import sys
 import json
 import nltk
 import gc
+from utils.utils import log_mem
 nltk.download('punkt')
 
 
@@ -109,6 +110,8 @@ def main(args):
                          max_docs_cnt=args.max_docs_cnt,
                          max_docs_frac=args.max_docs_frac,
                          corus=args.corus)
+
+    log_mem(folds, "folds")
 
     if len(folds) == 1:
         test = True
@@ -398,6 +401,9 @@ def main(args):
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
 
+    log_mem(train_loader, 'train_loader')
+    log_mem(valid_loader, 'train_loader')
+    log_mem(test_loader, 'train_loader')
 
     search_space = {
         'hidden_units': [args.hidden_units],
@@ -554,7 +560,7 @@ def main(args):
                 )
             else:
                 gpu_kwargs = {}
-            profiler = PyTorchProfiler(dirpath=exp, filename="perf_logs")
+            profiler = PyTorchProfiler(dirpath=exp, filename="perf_logs", profile_memory=True)
             trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
                               max_epochs=args.max_epochs,
                               default_root_dir=exp,
