@@ -51,11 +51,16 @@ def main(args):
         else:
             wandb.login()  # enter your API key when prompted
 
+        # if not args.hyperparameters_search:
+        #     exp_name = 'din='+str(args.dropout_in) \
+        #         + '_dout='+str(args.dropout_out)
+        # else:
         exp_name = 'enc_'+args.encoder + diff \
             + '_opt_'+args.optimizer \
             + '_lr_'+str(args.learning_rate) \
             +'_bs_'+str(args.batch_size) \
             +'_loss_'+args.loss_function
+
         log_model = not args.no_log_model
         if log_model:
             print("Model will be saved as wandb artifact.")
@@ -385,8 +390,12 @@ def main(args):
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
 
-    search_space = {'hidden_units': [
-        args.hidden_units], 'number_layers': [args.num_layers]}
+    search_space = {
+        'hidden_units': [args.hidden_units],
+        'number_layers': [args.num_layers],
+        'dropin': [args.dropout_in],
+        'dropout': [args.dropout_out]
+        }
 
     best_results_test = {'F1': 0, 'Pk': 1, 'WD': 1}
     best_results = 2 if args.metric == 'Pk' or args.metric == 'WD' else -1
@@ -397,35 +406,38 @@ def main(args):
     if args.hyperparameters_search:
         if len(args.hidden_units_search_space) > 0:
             search_space['hidden_units'] = args.hidden_units_search_space
-        hyperparameters.append(search_space['hidden_units'])
 
         if len(args.number_layers_search_space) > 0:
             search_space['number_layers'] = args.number_layers_search_space
-        hyperparameters.append(search_space['number_layers'])
 
         if len(args.dropout_in_search_space) > 0:
             search_space['dropin'] = args.dropout_in_search_space
-        hyperparameters.append(search_space['dropin'])
 
         if len(args.dropout_out_search_space) > 0:
             search_space['dropout'] = args.dropout_out_search_space
-        hyperparameters.append(search_space['dropout'])
 
-        hyperparameters = list(itertools.product(*hyperparameters))
+    hyperparameters.append(search_space['hidden_units'])
+    hyperparameters.append(search_space['number_layers'])
+    hyperparameters.append(search_space['dropin'])
+    hyperparameters.append(search_space['dropout'])
 
-        results_grid_f1 = {layer: []
-                           for layer in search_space['number_layers']}
-        results_grid_pk = {layer: []
-                           for layer in search_space['number_layers']}
-        results_grid_wd = {layer: []
-                           for layer in search_space['number_layers']}
+    hyperparameters = list(itertools.product(*hyperparameters))
+
+    results_grid_f1 = {layer: []
+                        for layer in search_space['number_layers']}
+    results_grid_pk = {layer: []
+                        for layer in search_space['number_layers']}
+    results_grid_wd = {layer: []
+                        for layer in search_space['number_layers']}
 
     with open('logs', 'w') as f:
         f.write('Training started all right...\n')
 
     seed_everything(args.seed, workers=True)
 
+    print(f"Hyperparameters search active: {args.hyperparameters_search}")
     for param_index, param_tuple in enumerate(hyperparameters):
+        print(f"Running model with hyperparameters (set {param_index}): {param_tuple}")
 
         results = []
         results_valid = []
@@ -435,7 +447,8 @@ def main(args):
         if args.hyperparameters_search:
             with open('logs', 'a') as f:
                 f.write(
-                    'Results for model with {} hidden units and {} layers...\n'.format(hu, nl))
+                    f'Results for model with {hu} hidden units and {nl} layers,\n'+ \
+                        f'trained with dropout_in={d_in} an dropout_out={d_out}\n')
 
         for index, segm in enumerate(loaders):
             if args.metric == 'Pk' or args.metric == 'WD' or not args.search_threshold:
@@ -670,6 +683,9 @@ def main(args):
                 best_hu = hu
                 best_nl = nl
 
+                best_d_in = d_in
+                best_d_out = d_out
+
                 try:
                     os.remove(os.path.join(check_dir, 'best_model'))
                 except:
@@ -723,6 +739,9 @@ def main(args):
                 best_hu = hu
                 best_nl = nl
 
+                best_d_in = d_in
+                best_d_out = d_out
+
                 best_model_name = os.path.join(check_dir, 'best_model')
 
                 os.rename(checkpoint_callback.best_model_path, best_model_name)
@@ -760,6 +779,11 @@ def main(args):
                 confidence_Valid = (np.percentile(
                     boots, 97.5) - np.percentile(boots, 2.5))/2
 
+        wandb.config.update({
+            "dropout_in": best_d_in,
+            "dropout_out": best_d_out
+        }, allow_val_change=True)
+
     if args.save_embeddings:
         if test:
             train_dataset.save_embeddings(
@@ -781,20 +805,22 @@ def main(args):
     else:
         label_map = {'Pk': 'Pk', 'WD': 'WD', 'F1': 'F1'}
 
-    if 'best_hu' not in locals():
-        best_hu = None
-    if 'best_nl' not in locals():
-        best_nl = None
-    if 'confidence_Pks' not in locals():
-        confidence_Pks = None
-    if 'confidence_WDs' not in locals():
-        confidence_WDs = None
-    if 'confidence_Bs' not in locals():
-        confidence_Bs = None
-    if 'confidence_F1s' not in locals():
-        confidence_F1s = None
-    if 'confidence_Valid' not in locals():
-        confidence_Valid = None
+    # if 'best_hu' not in locals():
+    #     best_hu = None
+    # if 'best_nl' not in locals():
+    #     best_nl = None
+    # if 'best_nl' not in locals():
+    #     best_nl = None
+    # if 'confidence_Pks' not in locals():
+    #     confidence_Pks = None
+    # if 'confidence_WDs' not in locals():
+    #     confidence_WDs = None
+    # if 'confidence_Bs' not in locals():
+    #     confidence_Bs = None
+    # if 'confidence_F1s' not in locals():
+    #     confidence_F1s = None
+    # if 'confidence_Valid' not in locals():
+    #     confidence_Valid = None
 
     if test:
 
@@ -980,7 +1006,7 @@ if __name__ == '__main__':
     parser.add_argument('--write_results', '-wr', action='store_false',
                         help='If included, the results will not be written in results file.')
 
-    parser.add_argument('--hyperparameters_search', '-hs', action='store_true',
+    parser.add_argument('--hyperparameters_search', '-hs', action='store_true', default=False,
                         help='If included, it will search for the best hidden units and layers numbers by doing a grid search among the options defined below and it will output a csv with all the results of the fitting process in addition to the standard results file.')
 
     parser.add_argument('--hidden_units_search_space', '-huss', nargs='*', required=False, type=int,
