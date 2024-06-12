@@ -28,6 +28,7 @@ import os
 import sys
 import json
 import nltk
+import gc
 nltk.download('punkt')
 
 
@@ -396,6 +397,7 @@ def main(args):
                     print('Test loader has: {} documents'.format(
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
+
 
     search_space = {
         'hidden_units': [args.hidden_units],
@@ -793,6 +795,8 @@ def main(args):
             "dropout_in": best_d_in,
             "dropout_out": best_d_out
         }, allow_val_change=True)
+
+        gc.collect()
 
     if args.save_embeddings:
         if test:
