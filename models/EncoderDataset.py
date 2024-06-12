@@ -21,6 +21,7 @@ import time
 import string
 import os
 from transformers import AutoTokenizer, AutoModel
+from utils.utils import TimeLogger
 # from simcse import SimCSE
 
 
@@ -95,9 +96,11 @@ class SentenceDataset(Dataset):
                 self.encoder = self.encoder.to(device)
                 print(f"Computing embeddings on {device}.")
 
-                pbar = tqdm(self.sentences, desc='Computing embeddings:')
+                tl = TimeLogger("Embeddings computation")
+                pbar = tqdm(self.sentences, desc='Computing embeddings')
                 self.embeddings = [self.encoder.encode(
                     sents, convert_to_tensor=True).detach().cpu() for sents in pbar]
+                tl.end()
 
                 if second_encoder is not None:
                     second_embeddings = [self.encoder2.encode(
