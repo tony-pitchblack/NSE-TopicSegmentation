@@ -57,11 +57,14 @@ def main(args):
         #     exp_name = 'din='+str(args.dropout_in) \
         #         + '_dout='+str(args.dropout_out)
         # else:
-        exp_name = 'enc_'+args.encoder + diff \
-            + '_opt_'+args.optimizer \
-            + '_lr_'+str(args.learning_rate) \
-            + '_bs_'+str(args.batch_size) \
-            + '_loss_'+args.loss_function
+        if args.verbose_log_name:
+            exp_name = 'enc_'+args.encoder + diff \
+                + '_opt_'+args.optimizer \
+                + '_lr_'+str(args.learning_rate) \
+                + '_bs_'+str(args.batch_size) \
+                + '_loss_'+args.loss_function
+        else:
+            exp_name = args.experiment_name
 
         log_model = not args.no_log_model
         if log_model:
