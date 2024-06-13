@@ -455,8 +455,8 @@ def main(args):
 
     print(f"Hyperparameters search active: {args.hyperparameters_search}")
     for param_index, param_tuple in enumerate(hyperparameters):
-        print(f"Running model with hyperparameters (set {
-              param_index}): {param_tuple}")
+        print(f"Running model with hyperparameters " +
+              f"(set {param_index}): {param_tuple}")
 
         results = []
         results_valid = []
