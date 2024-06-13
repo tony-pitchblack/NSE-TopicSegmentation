@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import nltk
 import pickle
+from utils.utils import TimeLogger
 nltk.download('punkt')
 
 
@@ -103,20 +104,20 @@ def load_dataset(dataset,
             max_docs_cnt = docs_cnt
         max_docs_cnt = min(max_docs_cnt, docs_cnt)
 
+        tl = TimeLogger("Collecting documents")
         pbar = tqdm(dataset, total=max_docs_cnt, desc="Collecting docs:")
         for i, doc in enumerate(pbar):
             if i == max_docs_cnt:
                 break
             docs_all.append(doc)
-        print("Done!")
+        tl.end()
 
-        train_pct, val_pct = 0.7, 0.2
+        train_pct = 0.8
         train_val_data, test_data = train_test_split(
             docs_all, train_size=train_pct)
-        train_data, val_data = train_test_split(
-            train_val_data, test_size=val_pct)
 
-        out_list = [train_data, test_data, val_data]
+        out_list = [train_val_data, test_data]
+
         out_list = [out_list]
         return (out_list)
 

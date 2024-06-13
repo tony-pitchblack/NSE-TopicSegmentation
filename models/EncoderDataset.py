@@ -21,13 +21,14 @@ import time
 import string
 import os
 from transformers import AutoTokenizer, AutoModel
+from utils.utils import TimeLogger
 # from simcse import SimCSE
 
 
 nltk.download('punkt')
 
 
-def load_embeddings(encoder_name, dataset_name, parent_directory='embeddings'):
+def load_embeddings(encoder_name, dataset_name, parent_directory='../embeddings'):
     in_dir = os.path.join(parent_directory, dataset_name, encoder_name)
 
     assert os.path.exists(
@@ -90,9 +91,16 @@ class SentenceDataset(Dataset):
             # TODO: include multiprocessing for generating the embeddings (with gpu/cpu support)
             if precompute:
                 self.precompute = True
-                pbar = tqdm(self.sentences, desc='Computing embeddings:')
+
+                device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+                self.encoder = self.encoder.to(device)
+                print(f"Computing embeddings on {device}.")
+
+                tl = TimeLogger("Embeddings computation")
+                pbar = tqdm(self.sentences, desc='Computing embeddings')
                 self.embeddings = [self.encoder.encode(
                     sents, convert_to_tensor=True).detach().cpu() for sents in pbar]
+                tl.end()
 
                 if second_encoder is not None:
                     second_embeddings = [self.encoder2.encode(
@@ -128,15 +136,16 @@ class SentenceDataset(Dataset):
     def __len__(self):
         return len(self.sentences)
 
-    def save_embeddings(self, encoder_name, dataset_name, parent_directory='embeddings'):
-        assert len(
-            self.embeddings[0]) > 1, 'The embeddings need to be precomputed in order to be saved'
+    def save_embeddings(self, encoder_name, dataset_name, parent_directory='../embeddings'):
+        if  len(self.embeddings[0]) > 1:
+            print('The embeddings need to be precomputed in order to be saved')
+            return
 
         out_dir = os.path.join(parent_directory, dataset_name, encoder_name)
 
         if os.path.exists(out_dir):
-            assert len(os.listdir(
-                out_dir)) == 0, 'The folder where to save the embeddings is not empty: if you want to save your embeddings first make sure that the folder {} is empty'.format(out_dir)
+            if len(os.listdir(out_dir)) == 0:
+                print('The folder where to save the embeddings is not empty: if you want to save your embeddings first make sure that the folder {} is empty'.format(out_dir))
         else:
             os.makedirs(out_dir)
 

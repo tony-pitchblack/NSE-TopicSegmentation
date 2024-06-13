@@ -12,7 +12,7 @@ from models.lightning_model import *
 from utils.load_datasets import *
 from models.EncoderDataset import *
 from pytorch_lightning.profilers import PyTorchProfiler
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.strategies import DDPStrategy
 from sentence_transformers import SentenceTransformer
@@ -28,6 +28,8 @@ import os
 import sys
 import json
 import nltk
+import gc
+from utils.utils import log_mem
 nltk.download('punkt')
 
 
@@ -51,21 +53,36 @@ def main(args):
         else:
             wandb.login()  # enter your API key when prompted
 
-        if args.verbose_log_name:
-            exp_log_name = 'enc_'+args.encoder + diff + '_opt_'+args.optimizer+'_lr_' + \
-                str(args.learning_rate)+'_bs_' + \
-                str(args.batch_size)+'_loss_'+args.loss_function,
+        # if not args.hyperparameters_search:
+        #     exp_name = 'din='+str(args.dropout_in) \
+        #         + '_dout='+str(args.dropout_out)
+        # else:
+        exp_name = 'enc_'+args.encoder + diff \
+            + '_opt_'+args.optimizer \
+            + '_lr_'+str(args.learning_rate) \
+            + '_bs_'+str(args.batch_size) \
+            + '_loss_'+args.loss_function
+
+        log_model = not args.no_log_model
+        if log_model:
+            print("Model will be saved as wandb artifact.")
         else:
-            exp_log_name = args.experiment_name
-        logger = WandbLogger(log_model=False, name=exp_log_name,  project=args.dataset +
-                             '_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
+            print("Model will NOT be saved as wandb artifact.")
+
+        # logger_dir = os.path.join(exp, os.path.split(exp)[0])
+        # logger_dir='hello_world/'
+        logger = WandbLogger(log_model=log_model,
+                             name=exp_name,
+                             project=args.dataset+'_'+args.architecture+'_'+args.metric,
+                             save_dir=exp
+                             )
     else:
         logger = None
 
     verbose = args.verbose
 
     assert not os.path.exists(
-        exp), 'The name of this experiment has already be used: please change experiment name or delete all the existent results from {} folder to use this name'.format(args.experiment_name)
+        exp), 'The name of this experiment has already be used: please change experiment name or delete all the existent results from {} folder to use this name'.format(exp)
 
     os.makedirs(exp)
 
@@ -94,12 +111,16 @@ def main(args):
                          max_docs_frac=args.max_docs_frac,
                          corus=args.corus)
 
+    log_mem(folds, "folds")
+
     if len(folds) == 1:
         test = True
+        print("Using predefined test split")
         if len(folds[0]) == 3:
             valid = True
+            print("Using predefined val split")
         elif len(folds[0]) == 2:
-            pass
+            print("Using dynamically created val split")
         else:
             raise ValueError("The returned dataset contains an incorrect number of sublists. You should return either a list of two lists if having just a training and test set or return a list of three lists if having training, test and validation sets.")
     elif len(folds[0]) > 3 or len(folds[0]) < 2:
@@ -131,7 +152,7 @@ def main(args):
 
         in_dim = encoder.get_sentence_embedding_dimension()+second_dim
 
-    os.chdir(args.experiment_name)
+    # os.chdir(exp)
 
     precompute = not args.online_encoding
 
@@ -155,6 +176,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = WordLevelDataset(
                     fold[0][:-valid_split], tag_to_ix, word2index, WordMatrix)
                 valid_dataset = WordLevelDataset(
@@ -204,6 +226,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = min(0, valid_split)
                 train_dataset = CrossEncoderDataset(
                     fold[0][:-valid_split], enc=encoder, minus=CRF, longformer=False)
                 valid_dataset = CrossEncoderDataset(
@@ -253,6 +276,7 @@ def main(args):
         for fold in folds:
             if not test:  # switch to change the validation/training split
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, precompute=precompute, CRF=CRF, cosine_loss=args.cosine_loss,
                                                 manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage, second_encoder=second_encoder)
                 valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder, precompute=precompute,
@@ -315,6 +339,7 @@ def main(args):
                         fold[2], tag_to_ix, encoder=encoder, embeddings=valid_embeddings, CRF=CRF, manual_max_length=args.max_doc_length)
                 else:
                     valid_split = int(len(fold[0])*valid_percentage)
+                    valid_split = max(1, valid_split)
                     train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, embeddings=train_embeddings, CRF=CRF, cosine_loss=args.cosine_loss,
                                                     manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage)
                     valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder,
@@ -338,10 +363,10 @@ def main(args):
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
         else:
-            os.chdir('../')
+            # os.chdir('../')
             embeddings = load_embeddings(
                 args.encoder, args.dataset, args.embeddings_directory)
-            os.chdir(args.experiment_name)
+            # os.chdir(exp)
             if args.dataset == 'choi':
                 embeddings = cross_validation_split(
                     embeddings, num_folds=7, n_test_folds=2)
@@ -351,6 +376,7 @@ def main(args):
             for index, fold in enumerate(folds):
 
                 valid_split = int(len(fold[0])*valid_percentage)
+                valid_split = max(1, valid_split)
                 train_dataset = SentenceDataset(fold[0][:-valid_split], tag_to_ix, encoder=encoder, embeddings=embeddings[index][0][:-valid_split], CRF=CRF, cosine_loss=args.cosine_loss,
                                                 manual_max_length=args.max_doc_length, mask_inner_sentences=args.mask_negatives_in_sequence, mask_probability=args.mask_percentage)
                 valid_dataset = SentenceDataset(fold[0][-valid_split:], tag_to_ix, encoder=encoder,
@@ -374,8 +400,16 @@ def main(args):
                         len(test_dataset)))
                 loaders.append((train_loader, valid_loader, test_loader))
 
-    search_space = {'hidden_units': [
-        args.hidden_units], 'number_layers': [args.num_layers]}
+    log_mem(train_loader, 'train_loader')
+    log_mem(valid_loader, 'train_loader')
+    log_mem(test_loader, 'train_loader')
+
+    search_space = {
+        'hidden_units': [args.hidden_units],
+        'number_layers': [args.num_layers],
+        'dropin': [args.dropout_in],
+        'dropout': [args.dropout_out]
+    }
 
     best_results_test = {'F1': 0, 'Pk': 1, 'WD': 1}
     best_results = 2 if args.metric == 'Pk' or args.metric == 'WD' else -1
@@ -386,35 +420,40 @@ def main(args):
     if args.hyperparameters_search:
         if len(args.hidden_units_search_space) > 0:
             search_space['hidden_units'] = args.hidden_units_search_space
-        hyperparameters.append(search_space['hidden_units'])
 
         if len(args.number_layers_search_space) > 0:
             search_space['number_layers'] = args.number_layers_search_space
-        hyperparameters.append(search_space['number_layers'])
 
         if len(args.dropout_in_search_space) > 0:
             search_space['dropin'] = args.dropout_in_search_space
-        hyperparameters.append(search_space['dropin'])
 
         if len(args.dropout_out_search_space) > 0:
             search_space['dropout'] = args.dropout_out_search_space
-        hyperparameters.append(search_space['dropout'])
 
-        hyperparameters = list(itertools.product(*hyperparameters))
+    hyperparameters.append(search_space['hidden_units'])
+    hyperparameters.append(search_space['number_layers'])
+    hyperparameters.append(search_space['dropin'])
+    hyperparameters.append(search_space['dropout'])
 
-        results_grid_f1 = {layer: []
-                           for layer in search_space['number_layers']}
-        results_grid_pk = {layer: []
-                           for layer in search_space['number_layers']}
-        results_grid_wd = {layer: []
-                           for layer in search_space['number_layers']}
+    hyperparameters = list(itertools.product(*hyperparameters))
 
-    with open('logs', 'w') as f:
+    results_grid_f1 = {layer: []
+                       for layer in search_space['number_layers']}
+    results_grid_pk = {layer: []
+                       for layer in search_space['number_layers']}
+    results_grid_wd = {layer: []
+                       for layer in search_space['number_layers']}
+
+    logs_path = os.path.join(exp, 'logs')
+    with open(logs_path, 'w') as f:
         f.write('Training started all right...\n')
 
     seed_everything(args.seed, workers=True)
 
+    print(f"Hyperparameters search active: {args.hyperparameters_search}")
     for param_index, param_tuple in enumerate(hyperparameters):
+        print(f"Running model with hyperparameters (set {
+              param_index}): {param_tuple}")
 
         results = []
         results_valid = []
@@ -422,9 +461,10 @@ def main(args):
         hu, nl, d_in, d_out = param_tuple
 
         if args.hyperparameters_search:
-            with open('logs', 'a') as f:
+            with open(logs_path, 'a') as f:
                 f.write(
-                    'Results for model with {} hidden units and {} layers...\n'.format(hu, nl))
+                    f'Results for model with {hu} hidden units and {nl} layers,\n' +
+                    f'trained with dropout_in={d_in} an dropout_out={d_out}\n')
 
         for index, segm in enumerate(loaders):
             if args.metric == 'Pk' or args.metric == 'WD' or not args.search_threshold:
@@ -439,7 +479,7 @@ def main(args):
                 verbose=True,
                 mode=mode)
 
-            check_dir = 'checkpoints'
+            check_dir = os.path.join(exp, 'checkpoints')
 
             if args.save_all_checkpoints:
                 check_dir = check_dir + '_{}'.format(index)
@@ -520,9 +560,14 @@ def main(args):
                 )
             else:
                 gpu_kwargs = {}
-            profiler = PyTorchProfiler(dirpath=".", filename="perf_logs")
-            trainer = Trainer(callbacks=[early_stop, checkpoint_callback],
+
+            lr_monitor = LearningRateMonitor(logging_interval='epoch')
+
+            profiler = PyTorchProfiler(
+                dirpath=exp, filename="perf_logs", profile_memory=True)
+            trainer = Trainer(callbacks=[early_stop, checkpoint_callback, lr_monitor],
                               max_epochs=args.max_epochs,
+                              default_root_dir=exp,
                               # gpus=args.num_gpus,
                               #   auto_lr_find=args.auto_lr_finder,
                               gradient_clip_val=args.gradient_clipping,
@@ -532,8 +577,9 @@ def main(args):
                               limit_train_batches=limit_train_batches,
                               limit_val_batches=limit_valid_batches,
                               profiler=profiler,
-                              strategy=DDPStrategy(
-                                  find_unused_parameters=True),
+                              #   strategy='ddp_notebook',
+                              #   strategy=DDPStrategy(
+                              #       find_unused_parameters=True),
                               **gpu_kwargs)
 
             if args.auto_lr_finder:
@@ -613,7 +659,7 @@ def main(args):
                 wd_label = 'WD_loss'
 
             if args.metric == 'B' or args.metric == 'scaiano':
-                with open('logs', 'a') as f:
+                with open(logs_path, 'a') as f:
                     f.write('Results for fold number {}\n'.format(index))
                     f.write('B_precision score: {}\n'.format(
                         results[-1][0][pk_label]))
@@ -626,7 +672,7 @@ def main(args):
                         f.write('B Similarity score: {}\n'.format(
                             results[-1][0][test_label]))
             else:
-                with open('logs', 'a') as f:
+                with open(logs_path, 'a') as f:
                     f.write('Results for fold number {}\n'.format(index))
                     f.write('PK score: {}\n'.format(results[-1][0][pk_label]))
                     f.write('WD score: {}\n'.format(results[-1][0][wd_label]))
@@ -660,14 +706,17 @@ def main(args):
                 best_hu = hu
                 best_nl = nl
 
+                best_d_in = d_in
+                best_d_out = d_out
+
                 try:
                     os.remove(os.path.join(check_dir, 'best_model'))
                 except:
                     pass
 
-                new_name = os.path.join(check_dir, 'best_model')
+                best_model_name = os.path.join(check_dir, 'best_model')
 
-                os.rename(checkpoint_callback.best_model_path, new_name)
+                os.rename(checkpoint_callback.best_model_path, best_model_name)
 
         else:
             Pks = [p[0][pk_label] for p in results]
@@ -713,9 +762,12 @@ def main(args):
                 best_hu = hu
                 best_nl = nl
 
-                new_name = os.path.join(check_dir, 'best_model')
+                best_d_in = d_in
+                best_d_out = d_out
 
-                os.rename(checkpoint_callback.best_model_path, new_name)
+                best_model_name = os.path.join(check_dir, 'best_model')
+
+                os.rename(checkpoint_callback.best_model_path, best_model_name)
 
                 def bootstrap(data, samples=10000):
                     if isinstance(data, list):
@@ -750,6 +802,13 @@ def main(args):
                 confidence_Valid = (np.percentile(
                     boots, 97.5) - np.percentile(boots, 2.5))/2
 
+        wandb.config.update({
+            "dropout_in": best_d_in,
+            "dropout_out": best_d_out
+        }, allow_val_change=True)
+
+        gc.collect()
+
     if args.save_embeddings:
         if test:
             train_dataset.save_embeddings(
@@ -771,24 +830,26 @@ def main(args):
     else:
         label_map = {'Pk': 'Pk', 'WD': 'WD', 'F1': 'F1'}
 
-    if 'best_hu' not in locals():
-        best_hu = None
-    if 'best_nl' not in locals():
-        best_nl = None
-    if 'confidence_Pks' not in locals():
-        confidence_Pks = None
-    if 'confidence_WDs' not in locals():
-        confidence_WDs = None
-    if 'confidence_Bs' not in locals():
-        confidence_Bs = None
-    if 'confidence_F1s' not in locals():
-        confidence_F1s = None
-    if 'confidence_Valid' not in locals():
-        confidence_Valid = None
+    # if 'best_hu' not in locals():
+    #     best_hu = None
+    # if 'best_nl' not in locals():
+    #     best_nl = None
+    # if 'best_nl' not in locals():
+    #     best_nl = None
+    # if 'confidence_Pks' not in locals():
+    #     confidence_Pks = None
+    # if 'confidence_WDs' not in locals():
+    #     confidence_WDs = None
+    # if 'confidence_Bs' not in locals():
+    #     confidence_Bs = None
+    # if 'confidence_F1s' not in locals():
+    #     confidence_F1s = None
+    # if 'confidence_Valid' not in locals():
+    #     confidence_Valid = None
 
     if test:
 
-        output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
+        output = ['Results for experiment {} with following parameters:'.format(exp),
                   'Sentence encoder: {}'.format(args.encoder),
                   'Neural architecture: {}'.format(args.architecture),
                   'Batch size: {}'.format(args.batch_size),
@@ -810,7 +871,7 @@ def main(args):
             output.append('Labels: ' + str(args.zero_shot_labels))
 
     else:
-        output = ['Results for experiment {} with following parameters:'.format(args.experiment_name),
+        output = ['Results for experiment {} with following parameters:'.format(exp),
                   'Sentence encoder: {}'.format(args.encoder),
                   'Neural architecture: {}'.format(args.architecture),
                   'Batch size: {}'.format(args.batch_size),
@@ -835,7 +896,8 @@ def main(args):
 
     if args.write_results:
 
-        with open('results.txt', 'w') as f:
+        results_path = os.path.join(exp, 'results.txt')
+        with open(results_path, 'w') as f:
             for line in output:
                 f.write('\n' + line + '\n')
 
@@ -844,7 +906,8 @@ def main(args):
                 pickle.dump(model.test_scores, f)
 
         argparse_dict = vars(args)
-        with open('hyperparameters.json', 'w') as f:
+        hparams_path = os.path.join(exp, 'hyperparameters.json')
+        with open(hparams_path, 'w') as f:
             json.dump(argparse_dict, f)
 
     if args.hyperparameters_search:
@@ -853,9 +916,9 @@ def main(args):
         wd_results = pd.DataFrame(results_grid_wd)
 
         if args.write_results:
-            f1_results.to_csv('F1_fit_results.csv')
-            pk_results.to_csv('Pk_fit_results.csv')
-            wd_results.to_csv('WD_fit_results.csv')
+            f1_results.to_csv(exp+'/F1_fit_results.csv')
+            pk_results.to_csv(exp+'/Pk_fit_results.csv')
+            wd_results.to_csv(exp+'/WD_fit_results.csv')
 
         return output, (f1_results, pk_results, wd_results)
 
@@ -973,7 +1036,7 @@ if __name__ == '__main__':
     parser.add_argument('--write_results', '-wr', action='store_false',
                         help='If included, the results will not be written in results file.')
 
-    parser.add_argument('--hyperparameters_search', '-hs', action='store_true',
+    parser.add_argument('--hyperparameters_search', '-hs', action='store_true', default=False,
                         help='If included, it will search for the best hidden units and layers numbers by doing a grid search among the options defined below and it will output a csv with all the results of the fitting process in addition to the standard results file.')
 
     parser.add_argument('--hidden_units_search_space', '-huss', nargs='*', required=False, type=int,
@@ -1080,6 +1143,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--corus', action='store_true',
                         help="If included, --dataset option specifies one of 'corus' datasets.")
+
+    parser.add_argument('--no_log_model', action='store_true',
+                        help="Disables saving model as wandb artifact")
 
     args = parser.parse_args()
 

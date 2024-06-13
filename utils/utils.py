@@ -5,11 +5,32 @@ import numpy as np
 import random
 from pathlib2 import Path
 from shutil import copy
+import time
+from datetime import timedelta
 
 
 
 config = {}
 
+
+def log_mem(obj, obj_name):
+    gb = sys.getsizeof(obj) * 1e-9
+    gb = round(gb, 2)
+    print(f"Object {obj_name} of class {obj.__class__} uses {gb} GB")
+
+class TimeLogger():
+    def __init__(self, proc_name):
+        self.proc_name = proc_name
+        self.start()
+    
+    def start(self):
+        self.t_start = time.perf_counter()
+
+    def end(self):
+        self.t_end = time.perf_counter()
+        delta_sec = self.t_end - self.t_start
+        delta = timedelta(seconds=round(delta_sec))
+        print(f"{self.proc_name} | total processing time: {delta}")
 
 def read_config_file(path='config.json'):
     global config
