@@ -51,8 +51,14 @@ def main(args):
         else:
             wandb.login()  # enter your API key when prompted
 
-        logger = WandbLogger(log_model=False, name='enc_'+args.encoder + diff + '_opt_'+args.optimizer+'_lr_'+str(args.learning_rate)+'_bs_'+str(
-            args.batch_size)+'_loss_'+args.loss_function, project=args.dataset+'_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
+        if args.verbose_log_name:
+            exp_log_name = 'enc_'+args.encoder + diff + '_opt_'+args.optimizer+'_lr_' + \
+                str(args.learning_rate)+'_bs_' + \
+                str(args.batch_size)+'_loss_'+args.loss_function,
+        else:
+            exp_log_name = args.experiment_name
+        logger = WandbLogger(log_model=False, name=exp_log_name,  project=args.dataset +
+                             '_'+args.architecture+'_'+args.metric, dir=os.path.split(exp)[0])
     else:
         logger = None
 
@@ -579,6 +585,7 @@ def main(args):
 
             model.s_th = False  # make sure you don't use the threshold lookup at testing stage
 
+            print("Testing time!")
             results.append(trainer.test(model, test_loader))
 
             if args.metric == 'F1':
@@ -866,6 +873,9 @@ if __name__ == '__main__':
 
     parser = MyParser(
         description='Run training with parameters defined in the relative json file')
+
+    parser.add_argument('--verbose_log_name', '-vln', action='store_true',
+                        help='The name of the current experiment (the output will be saved in a folder with the same name)')
 
     parser.add_argument('--experiment_name', '-exp', default='new_experiment', type=str,
                         help='The name of the current experiment (the output will be saved in a folder with the same name)')
