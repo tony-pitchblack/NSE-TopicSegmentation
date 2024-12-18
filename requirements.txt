@@ -21,3 +21,4 @@ pytorch-lightning
 wandb
 pytorch
 shutil
+corus
