@@ -19,6 +19,4 @@ xlrd==2.0.1
 XlsxWriter==1.4.2
 pytorch-lightning==2.4.0
 wandb==0.18.7
-pytorch
-shutil
 corus==0.10.0
