@@ -10,8 +10,8 @@ import torch
 import wandb
 import yaml
 
-from DataModule import TopSegDataModule
-from models.lightning_model import TextSegmenter
+from .DataModule import TopSegDataModule
+from .models.lightning_model import TextSegmenter
 #from main_cli import main_cli
 
 class MyParser(argparse.ArgumentParser):

@@ -1,9 +1,10 @@
 import nltk.data
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
-import utils.wiki_utils as wiki_utils
-import utils.wiki_thresholds as wiki_thresholds
-import utils.utils as utils
+
+from ..utils import wiki_utils
+from ..utils import wiki_thresholds
+from ..utils import utils
 
 sentence_tokenizer = None
 words_tokenizer = None

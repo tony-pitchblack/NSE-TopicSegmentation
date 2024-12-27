@@ -8,9 +8,6 @@ Created on Tue May 11 16:53:24 2021
 # TODO: change the code so that the optimal hyperparameters (e.g. number of layers, hidden units, etc.) are chosen on the basis of validation rather than test results
 
 import argparse
-from models.lightning_model import *
-from utils.load_datasets import *
-from models.EncoderDataset import *
 from pytorch_lightning.profilers import PyTorchProfiler
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning import Trainer, seed_everything
@@ -29,9 +26,12 @@ import sys
 import json
 import nltk
 import gc
-from utils.utils import log_mem
 nltk.download('punkt')
 
+from .models.lightning_model import *
+from .models.EncoderDataset import *
+from .utils.load_datasets import *
+from .utils.utils import log_mem
 
 def main(args):
 

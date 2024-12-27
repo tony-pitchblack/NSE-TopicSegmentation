@@ -3,8 +3,8 @@ import os
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader
 
-from models.EncoderDataset import *
-from utils.load_datasets import load_dataset
+from .models.EncoderDataset import *
+from .utils.load_datasets import load_dataset
 
 class TopSegDataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str = "./data", 

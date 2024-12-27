@@ -11,9 +11,9 @@ Created on Tue May 11 14:54:27 2021
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.focal_loss import sigmoid_focal_loss
-from models.RestrictedTransformerLayer import Longformer_Local_Attention, Classic_Transformer, Causal_Transformer
-from models.NeuralArchitectures import *
+from ..models.focal_loss import sigmoid_focal_loss
+from ..models.RestrictedTransformerLayer import Longformer_Local_Attention, Classic_Transformer, Causal_Transformer
+from ..models.NeuralArchitectures import *
 from collections import OrderedDict
 from transformers import AutoModel
 

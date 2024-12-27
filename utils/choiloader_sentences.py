@@ -12,8 +12,8 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 import random
-from utils.text_manipulation import split_sentences, extract_sentence_words
-import utils.utils as utils
+from ..utils.text_manipulation import split_sentences, extract_sentence_words
+from ..utils import utils
 import math
 
 

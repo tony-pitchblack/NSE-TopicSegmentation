@@ -2,8 +2,8 @@
 import torch
 from lightning.pytorch.cli import ArgsType, LightningCLI
 
-from models.lightning_model import TextSegmenter
-from DataModule import TopSegDataModule
+from .models.lightning_model import TextSegmenter
+from .DataModule import TopSegDataModule
 
 
 def cli_main(args: ArgsType = None):

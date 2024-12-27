@@ -7,7 +7,8 @@ from torch.nn.utils.rnn import pad_packed_sequence as PAD
 from torch.nn.parameter import Parameter
 from torch.autograd import Variable
 from collections import OrderedDict
-from models.RestrictedTransformerLayer import RestrictedTransformerEncoderLayer, PyramidalTransformerEncoder
+
+from ..models.RestrictedTransformerLayer import RestrictedTransformerEncoderLayer, PyramidalTransformerEncoder
 
 
 def create_mask(src, lengths):

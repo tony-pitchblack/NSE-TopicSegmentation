@@ -8,9 +8,7 @@ Created on Tue May 11 14:37:48 2021
 import torch
 import torch.nn as nn
 from sentence_transformers import SentenceTransformer
-# import tensorflow_hub as hub
 from torch.utils.data import Dataset, DataLoader
-from models.lightning_model import *
 import nltk
 from nltk.tokenize import word_tokenize
 import numpy as np
@@ -21,8 +19,9 @@ import time
 import string
 import os
 from transformers import AutoTokenizer, AutoModel
-from utils.utils import TimeLogger
-# from simcse import SimCSE
+
+from ..models.lightning_model import *
+from ..utils.utils import TimeLogger
 
 
 nltk.download('punkt')

@@ -3,15 +3,15 @@ from sentence_transformers import SentenceTransformer, InputExample, LoggingHand
 from sentence_transformers.evaluation import BinaryClassificationEvaluator
 from sentence_transformers.util import batch_to_device
 from torch.utils.data import DataLoader
-from utils.load_datasets import load_dataset
 from TripletSimilarityLoss import TripletSimilarityLoss
+from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 import argparse
 import torch
-from models.metrics import *
-from sklearn.metrics import f1_score, precision_score, recall_score
-
 import json
+
+from .utils.load_datasets import load_dataset
+from .models.metrics import *
 
 def main(args):
     

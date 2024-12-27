@@ -5,7 +5,7 @@ import re
 import utils.wiki_utils as wiki_utils
 import os
 
-import utils.utils as utils
+from ..utils import utils
 
 logger = utils.setup_logger(__name__, 'train.log')
 
