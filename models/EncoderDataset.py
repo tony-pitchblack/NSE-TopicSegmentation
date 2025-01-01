@@ -332,8 +332,10 @@ class CrossEncoderDataset(Dataset):
 
 
 class Predictor:
-    def __init__(self, trained_model, sentence_encoder, tag2ix=None, remove_char=None):
+    def __init__(self, trained_model, sentence_encoder, tag2ix=None, remove_char=None, persistent=False):
         self.model = trained_model
+        self.model.model.model.eval()
+
         if isinstance(sentence_encoder, str):
             self.se = SentenceTransformer(sentence_encoder)
         else:
@@ -343,6 +345,7 @@ class Predictor:
             self.tags = {0: 0, 1: 1, '<START>': 2, '<STOP>': 3}
         else:
             self.tags = tag2ix
+        self.persistent = persistent
 
     def online_sents_encoder(self, input_sentences):
         embs = []
@@ -426,8 +429,17 @@ class Predictor:
                 lengths = batch['src_lengths'].to(device)
                 input_sentences = batch['src_sentences']
 
-                batch_scores, batch_boundaries = self.model.model(
-                    inputs, lengths)
+                if self.persistent:
+                    if self.model.model.__class__.__name__ == 'BiLSTM':
+                        batch_scores, batch_boundaries = self.model.model(
+                            inputs, lengths, persistent=True
+                        )
+                    else:
+                        raise NotImplementedError
+                else:
+                    batch_scores, batch_boundaries = self.model.model(
+                        inputs, lengths
+                    )
 
                 if verbose:
                     print('Batch number {} segmented.'.format(index))
@@ -466,7 +478,14 @@ class Predictor:
 
                 inputs, length = self.online_sents_encoder(input_sentences)
 
-                scores, boundaries = self.model.model(inputs, length)
+                if self.persistent:
+                    if self.model.model.__class__.__name__ == 'BiLSTM':
+                        scores, boundaries = self.model.model(inputs, length, persistent=True)
+                    else:
+                        raise NotImplementedError
+                else:
+                    scores, boundaries = self.model.model(inputs, length)
+
 
                 embs = inputs.squeeze().numpy()
 

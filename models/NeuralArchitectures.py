@@ -39,6 +39,7 @@ class RNN(nn.Module):
         self.num_layers = num_layers  # number of recurrent layers
         # boolean: bidirectional=True makes the network bidirectional
         self.bidirectional = bidirectional
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         if LSTM:
             # If LSTM is true, use LSTM else use GRU
@@ -73,7 +74,22 @@ class RNN(nn.Module):
             # option to perform multitask learning with arousal of the sentence
             self.arousal = nn.Linear(hidden_size, 4)
 
-    def forward(self, line, line_len=None, apply_softmax=False, return_final=False, classifier=False):
+        self.initial_hidden_states = None
+        self.initial_cell_states = None
+    
+    def reset_hidden_states(self):
+        print('reset_hidden_states')
+        self.initial_hidden_states = None
+        self.initial_cell_states = None
+
+    def init_hidden_states(self, batch_size):
+        print('init_hidden_states')
+        directions = 2 if self.bidirectional else 1
+        state_size = (directions * self.num_layers, batch_size, self.hidden_size)
+        self.initial_hidden_states = torch.zeros(*state_size, device=self.device)
+        self.initial_cell_states = torch.zeros(*state_size, device=self.device)
+
+    def forward(self, line, line_len=None, apply_softmax=False, return_final=False, classifier=False, persistent=False):
         """
         Parameters:
             line (tensor): the input tensor having shape [batch_size, number_of_steps, features_dimensions]
@@ -93,18 +109,18 @@ class RNN(nn.Module):
         else:
             embedded = line
 
-        if self.bidirectional:
-            # if the network is bidirectional, first create the initial hidden and memory cell states (for LSTM)
+        # create the initial hidden and memory cell states (for LSTM)
+        if not persistent or (self.initial_hidden_states is None and self.initial_cell_states is None):
             batch_size = line.shape[0]
+            self.init_hidden_states(batch_size)
 
-            state_size = 2 * self.num_layers, batch_size, self.hidden_size
-
-            hidden_initial = line.new_zeros(*state_size)
-
-            cells_initial = line.new_zeros(*state_size)
-
+        if self.bidirectional:
             packed_out, (final_hidden_states, final_cell_states) = self.rnn(
-                embedded, (hidden_initial, cells_initial))
+                embedded, (self.initial_hidden_states, self.initial_cell_states)
+            )
+
+            self.initial_hidden_states = final_hidden_states
+            self.initial_cell_states = final_cell_states
 
             # unpack the rnn output and pad it with 0s where needed
             rnn_out, _ = PAD(packed_out, batch_first=True)
@@ -136,7 +152,11 @@ class RNN(nn.Module):
         else:
             # same as the bidirectional case, but with less operations needed
 
-            rnn_out, h_n = self.rnn(embedded)
+            rnn_out, h_n = self.rnn(
+                embedded, (self.initial_hidden_states, self.initial_cell_states)
+            )
+
+            self.initial_hidden_states, self.initial_cell_states = h_n
 
             if self.dropout_out:
                 rnn_out = F.dropout(rnn_out, p=self.dropout_out)
@@ -153,8 +173,10 @@ class RNN(nn.Module):
                 out = self.output(rnn_out_new)
                 if apply_softmax:
                     out = F.softmax(out, dim=1)
+
             else:
                 out = None
+            
             if return_final:
                 return out, rnn_out, h_n
             else:

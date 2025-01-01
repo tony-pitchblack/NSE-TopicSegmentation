@@ -644,11 +644,12 @@ class BiLSTM(nn.Module):
 
         return loss
 
-    def forward(self, xs, lenghts, threshold=0.4, device=None):
+    def forward(self, xs, lenghts, threshold=0.4, device=None, persistent=False):
         if device is None:
             device = self.device
+
         # Get the emission scores from the BiLSTM
-        _, x = self.model(xs, lenghts)
+        _, x = self.model(xs, lenghts, persistent=persistent)
 
         if self.rsa:
             x = xing_restricted_attention(
