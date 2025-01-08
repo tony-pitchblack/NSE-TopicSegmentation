@@ -9,10 +9,10 @@ import nltk
 import pickle
 nltk.download('punkt')
 
-from ..utils.choiloader_sentences import *
-from ..utils.wiki_loader_sentences import *
-from ..utils.corus_dataset import *
-from ..utils.utils import TimeLogger
+from .choiloader_sentences import *
+from .wiki_loader_sentences import *
+from .corus_dataset import *
+from .utils import TimeLogger
 
 def expand_label(labels, sentences):
     new_labels = [0 for i in range(len(sentences))]
