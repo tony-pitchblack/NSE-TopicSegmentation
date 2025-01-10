@@ -78,12 +78,12 @@ class RNN(nn.Module):
         self.initial_cell_states = None
     
     def reset_hidden_states(self):
-        print('reset_hidden_states')
+        # print('reset_hidden_states')
         self.initial_hidden_states = None
         self.initial_cell_states = None
 
     def init_hidden_states(self, batch_size):
-        print('init_hidden_states')
+        # print('init_hidden_states')
         directions = 2 if self.bidirectional else 1
         state_size = (directions * self.num_layers, batch_size, self.hidden_size)
         self.initial_hidden_states = torch.zeros(*state_size, device=self.device)
